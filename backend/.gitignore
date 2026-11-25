@@ -1,0 +1,35 @@
+# ==============================================================================
+# SEGURIDAD CRÍTICA Y SECRETS MANAGEMENT (OWASP)
+# ==============================================================================
+*.pem
+*.key
+*.pub
+*.pfx
+*.ppk
+credentials
+secrets.json
+.env
+
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Cache y temporales Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+
+# Base de datos local para dev
+*.sqlite3-journal
+
+# Estáticos compilados locales
+staticfiles/
+media/uploads/
+
+# Archivos de sistema e IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
