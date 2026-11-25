@@ -360,7 +360,7 @@ function RootComponent() {
                 <header className="sticky top-0 z-10 flex h-14 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur">
                   <SidebarTrigger />
                   <span className="font-display font-semibold text-sm hidden md:inline text-foreground/80">
-                    🐾 PetCare Clinic Compass
+                    🐾 PetCare • Gestión Clínica Veterinaria
                   </span>
                   <UserSessionBar />
                 </header>

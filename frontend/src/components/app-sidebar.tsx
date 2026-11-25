@@ -54,8 +54,8 @@ const groups = [
       { title: "Django Admin (Profe)", url: "/admin/", icon: ShieldAlert, external: true },
       { title: "API RESTful (DRF)", url: "/api/mascotas/", icon: Database, external: true },
       {
-        title: "Evidencia IA (4+1)",
-        url: "https://github.com/sebatmail/petcare-clinic-compass/blob/main/prompts_ia.md",
+        title: "Evidencia IA (Prompts)",
+        url: "https://github.com/sebatmail/AWS-BACKEND-4/blob/main/backend/docs/prompts_ia.md",
         icon: Sparkles,
         external: true,
       },
