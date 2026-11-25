@@ -5,6 +5,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
+from django.views.generic.base import RedirectView
 from . import views
 
 router = DefaultRouter()
@@ -26,20 +27,13 @@ urlpatterns = [
     # API RESTful DRF
     path('api/', include(router.urls)),
 
-    # Vistas Web y Dashboard con Panel Lateral
-    path('', views.dashboard_view, name='home'),
-    path('dashboard/', views.dashboard_view, name='dashboard'),
-    path('tutores/', views.tutores_view, name='tutores'),
-    path('mascotas/', views.mascotas_view, name='mascotas'),
-    path('citas/', views.citas_calendario_view, name='citas'),
-    path('fichas/', views.fichas_clinicas_view, name='fichas'),
-    path('fichas/<int:pk>/imprimir/', views.ficha_detalle_imprimible, name='ficha_imprimible'),
-    path('vacunacion/', views.vacunacion_view, name='vacunacion'),
-    path('pagos/', views.pagos_sandbox_view, name='pagos'),
-    path('pagos/<int:pk>/voucher/', views.voucher_pago_detalle, name='voucher_pago'),
-    path('asistente-ia/', views.asistente_ia_view, name='asistente_ia'),
-
-    # Autenticación y Sesiones
-    path('login/', views.login_usuario, name='login'),
-    path('logout/', views.logout_usuario, name='logout'),
+    # Redirección automática hacia la SPA Frontend React (http://32.202.76.247/)
+    path('', RedirectView.as_view(url='http://32.202.76.247/', permanent=False), name='home'),
+    path('dashboard/', RedirectView.as_view(url='http://32.202.76.247/', permanent=False), name='dashboard'),
+    path('citas/', RedirectView.as_view(url='http://32.202.76.247/agenda', permanent=False), name='citas'),
+    path('mascotas/', RedirectView.as_view(url='http://32.202.76.247/mascotas', permanent=False), name='mascotas'),
+    path('tutores/', RedirectView.as_view(url='http://32.202.76.247/tutores', permanent=False), name='tutores'),
+    path('fichas/', RedirectView.as_view(url='http://32.202.76.247/fichas', permanent=False), name='fichas'),
+    path('pagos/', RedirectView.as_view(url='http://32.202.76.247/pagos', permanent=False), name='pagos'),
+    path('recordatorios/', RedirectView.as_view(url='http://32.202.76.247/recordatorios', permanent=False), name='recordatorios'),
 ]
