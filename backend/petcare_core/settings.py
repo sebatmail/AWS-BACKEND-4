@@ -51,6 +51,17 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://54.175.250.115',
+    'http://54.224.67.92',
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:3000',
+    'http://localhost:8000',
+    'https://*.execute-api.us-east-1.amazonaws.com',
+]
 
 ROOT_URLCONF = 'petcare_core.urls'
 
