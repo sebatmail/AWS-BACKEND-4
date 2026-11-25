@@ -54,6 +54,8 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CSRF_TRUSTED_ORIGINS = [
+    'http://32.202.76.247',
+    'http://54.162.236.160',
     'http://54.175.250.115',
     'http://54.224.67.92',
     'http://localhost',

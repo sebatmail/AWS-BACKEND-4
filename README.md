@@ -15,7 +15,7 @@
 
 <br/>
 
-**[🌐 Explorar Frontend en Producción](http://54.175.250.115/)** • **[🛡️ Django Admin del Evaluador](http://54.175.250.115/admin/)** • **[⚡ API Gateway Rate Limit](https://vj6thiz42d.execute-api.us-east-1.amazonaws.com/api/mascotas/)** • **[📦 Repositorio GitHub](https://github.com/sebatmail/AWS-BACKEND-4.git)**
+**[🌐 Explorar Frontend en Producción](http://32.202.76.247/)** • **[🛡️ Django Admin del Evaluador](http://32.202.76.247/admin/)** • **[⚡ API Gateway Rate Limit](https://vj6thiz42d.execute-api.us-east-1.amazonaws.com/api/mascotas/)** • **[📦 Repositorio GitHub](https://github.com/sebatmail/AWS-BACKEND-4.git)**
 
 <p align="center">
   <em>Sistema hospitalario veterinario integral con arquitectura desacoplada multi-capa de alta disponibilidad, seguridad criptográfica PBKDF2/KMS, microservicio serverless de respaldo automatizado y observabilidad continua.</em>
@@ -56,8 +56,8 @@ flowchart TD
     end
 
     subgraph AWS_COMPUTE [" Capa de Cómputo (Amazon EC2) "]
-        EC2_FRONT["💻 EC2-FRONTEND (i-09bbdac8df188b72e)\n• IP: 54.175.250.115\n• React TanStack Start + Node.js 20\n• Nginx Reverse Proxy (Port 80)"]
-        EC2_BACK["⚙️ EC2-BACKEND-DRF (i-0cf56e10655b7ab5e)\n• IP: 54.224.67.92\n• Django REST Framework + Gunicorn\n• Nginx Reverse Proxy (Port 80/8000)"]
+        EC2_FRONT["💻 EC2-FRONTEND (i-09bbdac8df188b72e)\n• IP Elástica: 32.202.76.247\n• React TanStack Start + Node.js 20\n• Nginx Reverse Proxy (Port 80)"]
+        EC2_BACK["⚙️ EC2-BACKEND-DRF (i-0cf56e10655b7ab5e)\n• IP Elástica: 54.162.236.160\n• Django REST Framework + Gunicorn\n• Nginx Reverse Proxy (Port 80/8000)"]
     end
 
     subgraph AWS_PERSISTENCE [" Capa de Persistencia & Almacenamiento "]
@@ -90,8 +90,8 @@ flowchart TD
 
 | Servicio AWS | Recurso / ID Oficial | Dirección / Endpoint Público | Configuración de Seguridad |
 |---|---|---|---|
-| **Amazon EC2 (Frontend)** | `EC2-FRONTEND`<br/>`i-09bbdac8df188b72e` | [`http://54.175.250.115/`](http://54.175.250.115/) | Nginx 1.24 + Ubuntu 24.04 LTS. Proxy inverso con cabeceras `X-Forwarded-*`. |
-| **Amazon EC2 (Backend)** | `EC2-BACKEND-DRF`<br/>`i-0cf56e10655b7ab5e` | [`http://54.224.67.92/`](http://54.224.67.92/) | Gunicorn 3 workers + Django 5.1.3. `CSRF_TRUSTED_ORIGINS` y CORS configurados. |
+| **Amazon EC2 (Frontend)** | `EC2-FRONTEND`<br/>`i-09bbdac8df188b72e` | [`http://32.202.76.247/`](http://32.202.76.247/) | Nginx 1.24 + Ubuntu 24.04 LTS. Proxy inverso con cabeceras `X-Forwarded-*`. IP Elástica fija asignada. |
+| **Amazon EC2 (Backend)** | `EC2-BACKEND-DRF`<br/>`i-0cf56e10655b7ab5e` | [`http://54.162.236.160/`](http://54.162.236.160/) | Gunicorn 3 workers + Django 5.1.3. `CSRF_TRUSTED_ORIGINS` y CORS configurados. IP Elástica fija asignada. |
 | **Amazon RDS (PostgreSQL)** | `petcare-eval4-db`<br/>Engine: `PostgreSQL 16.9` | `petcare-eval4-db.cgx1fyibrg3j.us-east-1.rds.amazonaws.com` | **Cifrado en reposo activo mediante AWS KMS**. Security Group restringido al puerto 5432 para la VPC privada. |
 | **Amazon S3** | `petcare-eval4-static-assets-203072872080` | `s3://petcare-eval4-static-assets-203072872080` | **Cifrado en reposo SSE-S3 (AES256)**. Bloqueo de acceso público indiscriminado y control granular. |
 | **Amazon API Gateway** | `petcare-eval4-api-gateway`<br/>ID: `vj6thiz42d` | [`https://vj6thiz42d.execute-api.us-east-1.amazonaws.com`](https://vj6thiz42d.execute-api.us-east-1.amazonaws.com) | HTTP API con **Rate Limit de 2 req/s** y **Burst de 5 req/s**. Retorna `HTTP 429 Too Many Requests`. |
@@ -195,7 +195,7 @@ Cumpliendo con la **Actividad 2** de la pauta de evaluación:
 Cumpliendo con la **Actividad 4** de la pauta de evaluación:
 
 - **Servicio:** Amazon API Gateway (Protocolo HTTP API).
-- **Target Backend:** `http://54.224.67.92:8000`
+- **Target Backend:** `http://54.162.236.160:8000` (IP Elástica)
 - **Configuración de Throttling en Stage `$default`:**
   - `ThrottlingRateLimit`: **2.0 solicitudes/segundo** (tasa sostenida).
   - `ThrottlingBurstLimit`: **5 solicitudes** (capacidad de ráfaga máxima).
