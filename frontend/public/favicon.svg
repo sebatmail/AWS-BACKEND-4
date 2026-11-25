@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#0d9488" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#grad)" />
+  <!-- PetCare Paw Print -->
+  <circle cx="21" cy="22" r="6" fill="#ffffff" />
+  <circle cx="43" cy="22" r="6" fill="#ffffff" />
+  <circle cx="13" cy="34" r="5" fill="#ffffff" />
+  <circle cx="51" cy="34" r="5" fill="#ffffff" />
+  <path d="M32 30 C24 30 19 36 21 46 C22 51 26 53 32 53 C38 53 42 51 43 46 C45 36 40 30 32 30 Z" fill="#ffffff" />
+</svg>
