@@ -115,8 +115,10 @@ export function AppSidebar() {
       </SidebarContent>
       <SidebarFooter>
         <div className="px-2 pb-2 text-[11px] text-sidebar-foreground/70 group-data-[collapsible=icon]:hidden space-y-1">
-          <p className="font-semibold text-emerald-600 dark:text-emerald-400">● PostgreSQL 18 Activo</p>
-          <p className="text-muted-foreground">AWS EC2 44.193.33.51</p>
+          <p className="font-semibold text-emerald-600 dark:text-emerald-400">● RDS PostgreSQL 16.9 Cifrado</p>
+          <p className="text-muted-foreground">EC2 Front: 54.175.250.115</p>
+          <p className="text-muted-foreground">EC2 Back: 54.224.67.92</p>
+          <p className="text-muted-foreground">API Gateway: vj6thiz42d</p>
         </div>
       </SidebarFooter>
     </Sidebar>
