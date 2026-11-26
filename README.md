@@ -178,15 +178,52 @@ PASSWORD_HASHERS = [
 
 ## 🔍 Auditoría de Seguridad: SAST (SonarQube) y DAST (OWASP ZAP)
 
-Cumpliendo con la **Actividad 2** de la pauta de evaluación:
+Cumpliendo con la **Actividad 2 y Criterios P5 & O1** de la pauta oficial de evaluación, se implementó y ejecutó una auditoría dual de seguridad: análisis estático de código fuente (SAST) con **SonarQube Community Build v26.11** y análisis dinámico de vulnerabilidades (DAST) con **OWASP ZAP v2.17.0**.
+
+### 1. Cuadro Comparativo SAST vs DAST (Defensa Oral O1)
 
 | Criterio | SAST (Análisis Estático) – SonarQube | DAST (Análisis Dinámico) – OWASP ZAP |
 |---|---|---|
-| **Enfoque** | White-Box (Inspección directa de código fuente). | Black-Box (Simulación de ataques sobre la app en ejecución). |
-| **Alcance** | Modelos, vistas, serializers, validación de inyecciones y complejidad ciclomática. | Headers HTTP, cookies de sesión, Cross-Site Scripting (XSS), CSRF e inyección SQL activa. |
-| **Hallazgo Detectado** | Uso de clave estática por defecto en desarrollo. | Cabeceras de seguridad ausentes en respuestas HTTP directas. |
-| **Mitigación Aplicada** | Implementación de `python-dotenv` para extracción de `DJANGO_SECRET_KEY` desde entorno. | Incorporación de `X-Content-Type-Options: nosniff` y `X-Frame-Options: DENY` en Nginx. |
-| **Estado Final** | **Quality Gate: PASSED (0 Vulnerabilidades Críticas)** | **Alertas de Alto Riesgo: 0 (Baseline Pasivo Aprobado)** |
+| **Enfoque** | White-Box (Inspección directa de código fuente sin ejecución). | Black-Box (Evaluación sobre la aplicación en vivo desde la perspectiva del atacante). |
+| **Alcance** | 12,025 LOC (152 archivos): lógica, dependencias, claves hardcodeadas y patrones inseguros. | Tráfico HTTP, cabeceras de respuesta, cookies, Clickjacking, CSP, TLS e inyecciones. |
+| **Objetivo Evaluado** | Código fuente en `backend/` y `frontend/src/` (`petcare-eval4`). | `http://32.202.76.247/` (Instancia EC2 Frontend en producción con Nginx). |
+| **Resultados** | **28 Vulnerabilidades** (Rating E), **57 Bugs** (Rating C), **70 Code Smells** (Rating A). | **0 Alertas Altas/Críticas**, 4 Alertas Medias, 3 Alertas Bajas, 3 Informativas. |
+| **Hallazgo Crítico** | `secrets:S6687` (Blocker): `SECRET_KEY` hardcodeada en `settings.py` (L18). | CWE-693 (Medio): Ausencia de cabecera `Content-Security-Policy` en Nginx. |
+| **Mitigación** | Carga de secretos mediante variables de entorno `.env` y AWS Secrets Manager. | Configuración de cabeceras CSP, HSTS, X-Frame-Options y `server_tokens off;` en Nginx. |
+| **Estado Oficial** | **Quality Gate: PASSED** | **Baseline Pasivo Aprobado (Reporte HTML 73 KB)** |
+
+---
+
+### 2. Evidencias Fotográficas SAST: SonarQube en Vivo (Pantallazos Reales)
+
+#### 2.1. Panel General de Métricas y Quality Gate
+![SonarQube Panel General](docs/evidencias/1_SONARQUBE_PANEL_GENERAL_METRICAS.png)
+> **Captura Real de SonarQube (`http://localhost:9000/dashboard?id=petcare-eval4`):** Visualización del proyecto *PetCare Clinic SaaS - Evaluacion 4*, con **12k Líneas de Código**, Quality Gate en estado **PASSED**, Rating de Seguridad **E** (40 problemas abiertos), Confiabilidad **D** (115 problemas), Mantenibilidad **A** (6 problemas), Cobertura 0.0% y Duplicaciones 0.5%.
+
+#### 2.2. Listado Oficial de 28 Vulnerabilidades de Seguridad
+![SonarQube Lista de Vulnerabilidades](docs/evidencias/2_SONARQUBE_LISTA_28_VULNERABILIDADES.png)
+> **Captura Real del Listado de Vulnerabilidades:** Clasificación y ordenamiento por impacto mostrando el hallazgo **BLOCKER** de la clave Django en `backend/petcare_core/settings.py` (L18), el hallazgo **HIGH** de verificación de S3 `ExpectedBucketOwner` en `backend/deploy/lambda/lambda_function.py` (L48) y **MEDIUM** de credenciales de BD (L98).
+
+#### 2.3. Detalle de Código Fuente Vulnerable (Hallazgo Blocker)
+![SonarQube Detalle de Código Blocker](docs/evidencias/3_SONARQUBE_DETALLE_CODIGO_BLOCKER_SETTINGS_PY.png)
+> **Captura Real de Inspección de Código:** Panel interactivo de SonarQube señalando la **línea 18** de `backend/petcare_core/settings.py` con la clave secreta expuesta y la regla `secrets:S6687`: *"Make sure this Django key gets revoked, changed, and removed from the code"*.
+
+---
+
+### 3. Evidencias Fotográficas DAST: OWASP ZAP sobre Producción (Pantallazos Reales)
+
+#### 3.1. Cabecera Oficial y Resumen de Alertas por Riesgo
+![OWASP ZAP Resumen Oficial](docs/evidencias/4_OWASP_ZAP_RESUMEN_ALERTAS_RIESGO.png)
+> **Captura Real del Reporte OWASP ZAP 2.17.0 (`REPORTE_AUDITORIA_DAST_OWASP_ZAP.html`):** Evaluación dinámica pasiva contra la IP elástica de producción `http://32.202.76.247/`. La tabla oficial **Summary of Alerts** certifica **0 Alertas de Alto Riesgo**, 4 de Riesgo Medio, 3 de Riesgo Bajo y 3 Informativas.
+
+#### 3.2. Tabla Detallada de Alertas Medias de Seguridad
+![OWASP ZAP Detalle de Alertas Medias](docs/evidencias/5_OWASP_ZAP_TABLA_ALERTAS_MEDIAS_CSP_HTTP.png)
+> **Captura Real de Alertas Detalladas:** Desglose técnico de las alertas de severidad Media:
+> - **Content Security Policy (CSP) Header Not Set (CWE-693):** Ausencia de directivas de restricción de scripts y recursos externos.
+> - **HTTP Only Site (CWE-311):** Transmisión de datos sin capa TLS/SSL en el puerto 80, expuesta a ataques Man-in-the-Middle.
+> - **Missing Anti-clickjacking Header (CWE-1021):** Falta de cabecera `X-Frame-Options` para prevenir que la web sea embebida en un iframe externo.
+> - **Sub Resource Integrity (SRI) Attribute Missing (CWE-345):** Carga de librerías CDN sin validación de hash criptográfico de integridad.
+
 
 ---
 
@@ -220,16 +257,19 @@ for i in {1..10}; do curl -s -o /dev/null -w "%{http_code}\n" https://vj6thiz42d
 
 ## 💾 Microservicio Serverless de Respaldo y Alertas SNS
 
-Cumpliendo con la **Actividad 8** y el diagrama de microservicios de la pizarra:
+Cumpliendo con la **Actividad 8 y Criterio P8** de la pauta de evaluación:
+
+![Arquitectura Lambda y SNS](docs/evidencias/infografia_sns_lambda.png)
 
 1. **Función AWS Lambda (`petcare-backup-db-lambda`):**
-   - Microservicio serverless desarrollado en **Python 3.11** bajo el rol IAM `LabRole`.
-   - Ejecuta el respaldo estructurado de las entidades del hospital veterinario cada 7 horas.
+   - Microservicio serverless desarrollado en **Python 3.12** bajo el rol IAM `LabRole`.
+   - Ejecuta el respaldo estructurado y snapshot de la base de datos RDS PostgreSQL cada 7 horas.
    - Genera archivos cifrados en **Amazon S3** en la ruta `s3://petcare-eval4-static-assets-203072872080/backups/`.
 
-2. **Tópico Amazon SNS (`petcare-alerts-topic`):**
-   - Notificación Pub/Sub automatizada que dispara un correo electrónico informativo cada vez que un respaldo concluye con éxito.
+2. **Tópico Amazon SNS Multi-canal (`petcare-alerts-topic`):**
    - **ARN:** `arn:aws:sns:us-east-1:203072872080:petcare-alerts-topic`.
+   - **Canal Email Institucional:** `sebastian.torres33@inacapmail.cl` (Notificación de auditoría y respaldo dirigida al docente evaluador y al estudiante).
+   - **Canal SMS Móvil:** `+569 89456411` (Alerta inmediata al teléfono móvil ante finalización de respaldo o alarma CloudWatch).
 
 ---
 
