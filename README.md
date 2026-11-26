@@ -15,7 +15,7 @@
 
 <br/>
 
-**[🌐 Explorar Frontend en Producción](http://32.202.76.247/)** • **[🛡️ Django Admin del Evaluador](http://32.202.76.247/admin/)** • **[⚡ API Gateway Rate Limit](https://vj6thiz42d.execute-api.us-east-1.amazonaws.com/api/mascotas/)** • **[📦 Repositorio GitHub](https://github.com/sebatmail/AWS-BACKEND-4.git)**
+**[🌐 Explorar Frontend en Producción](http://32.202.76.247/)** • **[🛡️ Reporte DAST OWASP ZAP (HTML)](./REPORTE_AUDITORIA_DAST_OWASP_ZAP.html)** • **[⚡ API Gateway Rate Limit](https://vj6thiz42d.execute-api.us-east-1.amazonaws.com/api/mascotas/)** • **[📊 Presentación Oficial PPTX](./docs/PRESENTACION_EVALUACION_4_SEBASTIAN_TORRES.pptx)**
 
 <p align="center">
   <em>Sistema hospitalario veterinario integral con arquitectura desacoplada multi-capa de alta disponibilidad, seguridad criptográfica PBKDF2/KMS, microservicio serverless de respaldo automatizado y observabilidad continua.</em>
@@ -211,6 +211,8 @@ Cumpliendo con la **Actividad 2 y Criterios P5 & O1** de la pauta oficial de eva
 ---
 
 ### 3. Evidencias Fotográficas DAST: OWASP ZAP sobre Producción (Pantallazos Reales)
+
+> 📄 **Reporte HTML Oficial Completo:** El informe íntegro de 73 KB generado por OWASP ZAP se encuentra disponible directamente en el repositorio: **[REPORTE_AUDITORIA_DAST_OWASP_ZAP.html](./REPORTE_AUDITORIA_DAST_OWASP_ZAP.html)** y en **[`docs/REPORTE_AUDITORIA_DAST_OWASP_ZAP.html`](./docs/REPORTE_AUDITORIA_DAST_OWASP_ZAP.html)**.
 
 #### 3.1. Cabecera Oficial y Resumen de Alertas por Riesgo
 ![OWASP ZAP Resumen Oficial](docs/evidencias/4_OWASP_ZAP_RESUMEN_ALERTAS_RIESGO.png)
