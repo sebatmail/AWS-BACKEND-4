@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -100,6 +100,27 @@ function ProviderIcon({ prov, size = "md" }: { prov: string; size?: "sm" | "md" 
 function Pagos() {
   const s = useStore();
   const auth = useAuth();
+  const role = auth.role;
+
+  // RBAC: Si es veterinario, las finanzas y cobros están restringidos al área de tesorería
+  if (role === "vet") {
+    return (
+      <div className="max-w-xl mx-auto py-16 text-center space-y-4">
+        <div className="mx-auto size-16 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+          <CreditCard className="size-8" />
+        </div>
+        <h2 className="text-2xl font-bold">Módulo Financiero Restringido</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          El procesamiento financiero, recaudación y pasarelas de pago corresponden al área de tesorería y administración clínica. El equipo médico veterinario gestiona la atención médica y recetas en las secciones <strong>Agenda</strong> y <strong>Fichas Clínicas</strong>.
+        </p>
+        <Button asChild className="cursor-pointer">
+          <Link to="/agenda">Ir a Agenda Médica</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const isTutor = role === "tutor";
   const search = Route.useSearch();
   const navigate = useNavigate();
   const [prov, setProv] = useState<(typeof PROVS)[number]["id"]>("tbk");
@@ -212,15 +233,19 @@ function Pagos() {
   return (
     <>
       <PageHeader
-        title="Pasarelas de Pago"
-        subtitle="Integración completa con Transbank Webpay Plus, Mercado Pago, PayPal y Criptoactivo — Persistido en PostgreSQL"
+        title={isTutor ? "Mis Pagos & Boletas" : "Pasarelas de Pago"}
+        subtitle={
+          isTutor
+            ? "Paga tus consultas y atenciones médicas veterinarias en línea con Webpay Plus o Mercado Pago"
+            : "Integración completa con Transbank Webpay Plus, Mercado Pago, PayPal y Criptoactivo — Persistido en PostgreSQL"
+        }
       />
 
       <div className="grid gap-6 xl:grid-cols-[450px_1fr]">
         <Card className="shadow-card border-0">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CreditCard className="size-5 text-primary" /> Nuevo Cobro Clínico
+              <CreditCard className="size-5 text-primary" /> {isTutor ? "Pagar Atención Médica" : "Nuevo Cobro Clínico"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">

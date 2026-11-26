@@ -21,9 +21,17 @@ const estadoCls: Record<EstadoCita, string> = { Programada: "bg-secondary text-s
 function Agenda() {
   const s = useStore();
   const auth = useAuth();
+  const role = auth.role;
+  const isTutor = role === "tutor";
+  const tutorId = auth.user?.tutorId ?? "t1";
+
+  const mascotasPermitidas = isTutor
+    ? s.mascotas.filter((m) => m.tutorId === tutorId)
+    : s.mascotas;
+
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [open, setOpen] = useState(false);
-  const [f, setF] = useState({ mascotaId: "", vetId: s.vets[0]?.id ?? "", hora: "10:00", duracion: 30, motivo: "" });
+  const [f, setF] = useState({ mascotaId: mascotasPermitidas[0]?.id ?? "", vetId: s.vets[0]?.id ?? "", hora: "10:00", duracion: 30, motivo: "" });
   const mover = (n: number) => { const d = new Date(fecha + "T12:00:00"); d.setDate(d.getDate() + n); setFecha(d.toISOString().slice(0, 10)); };
   const crear = () => {
     if (!f.mascotaId || f.motivo.trim().length < 3) { toast.error("Completa mascota y motivo"); return; }
@@ -45,7 +53,7 @@ function Agenda() {
             <Button onClick={() => auth.requireAuth("create_cita", () => setOpen(true))}><Plus /> Nueva cita</Button>
             <DialogContent><DialogHeader><DialogTitle>Agendar cita · {fecha}</DialogTitle></DialogHeader>
               <div className="grid gap-3">
-                <Field label="Mascota"><NativeSelect value={f.mascotaId} onChange={(e) => setF({ ...f, mascotaId: e.target.value })}><option value="">Seleccionar…</option>{s.mascotas.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</NativeSelect></Field>
+                <Field label="Mascota"><NativeSelect value={f.mascotaId} onChange={(e) => setF({ ...f, mascotaId: e.target.value })}><option value="">Seleccionar…</option>{mascotasPermitidas.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}</NativeSelect></Field>
                 <Field label="Profesional"><NativeSelect value={f.vetId} onChange={(e) => setF({ ...f, vetId: e.target.value })}>{s.vets.map((v) => <option key={v.id} value={v.id}>{v.nombre}</option>)}</NativeSelect></Field>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label="Hora"><NativeSelect value={f.hora} onChange={(e) => setF({ ...f, hora: e.target.value })}>{HORAS.map((h) => <option key={h}>{h}</option>)}</NativeSelect></Field>
@@ -77,9 +85,13 @@ function Agenda() {
                     {c ? (
                       <div className={`rounded-lg p-2 text-xs ${estadoCls[c.estado]}`}>
                         <p className="font-semibold">{m?.nombre} · {c.duracion}′</p><p className="opacity-90">{c.motivo}</p>
-                        <select value={c.estado} onChange={(e) => cambiar(c.id, e.target.value as EstadoCita)} className="mt-1 rounded bg-background/80 px-1 text-foreground">
-                          {(["Programada", "Confirmada", "Atendida", "Cancelada"] as const).map((x) => <option key={x}>{x}</option>)}
-                        </select>
+                        {!isTutor ? (
+                          <select value={c.estado} onChange={(e) => cambiar(c.id, e.target.value as EstadoCita)} className="mt-1 rounded bg-background/80 px-1 text-foreground">
+                            {(["Programada", "Confirmada", "Atendida", "Cancelada"] as const).map((x) => <option key={x}>{x}</option>)}
+                          </select>
+                        ) : (
+                          <span className="mt-1 inline-block text-[10px] font-semibold opacity-90">{c.estado}</span>
+                        )}
                       </div>
                     ) : libre ? <button className="h-full w-full rounded-lg text-xs text-transparent hover:bg-secondary hover:text-primary" onClick={() => { setF({ ...f, vetId: v.id, hora: h }); setOpen(true); }}>+ Agendar</button> : null}
                   </div>);

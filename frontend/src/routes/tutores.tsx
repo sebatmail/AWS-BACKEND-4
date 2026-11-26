@@ -1,19 +1,26 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Mail, Phone, MapPin, Trash2, Upload, Sparkles, X, User } from "lucide-react";
+import { Plus, Mail, Phone, MapPin, Trash2, Upload, Sparkles, X, User, ShieldAlert, ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { PageHeader, Field } from "@/components/page";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { uid, validarRut } from "@/lib/clinic";
 
 export const Route = createFileRoute("/tutores")({
-  head: () => ({ meta: [{ title: "Tutores · PetCare" }, { name: "description", content: "Registro y perfiles de tutores de mascotas." }, { property: "og:title", content: "Tutores · PetCare" }, { property: "og:description", content: "Registro y perfiles de tutores." }] }),
+  head: () => ({
+    meta: [
+      { title: "Tutores · PetCare" },
+      { name: "description", content: "Registro y perfiles de tutores de mascotas." },
+      { property: "og:title", content: "Tutores · PetCare" },
+      { property: "og:description", content: "Registro y perfiles de tutores." },
+    ],
+  }),
   component: Tutores,
 });
 
@@ -36,6 +43,28 @@ const PRESET_TUTOR_AVATARS = [
 function Tutores() {
   const s = useStore();
   const auth = useAuth();
+  const role = auth.role;
+
+  // RBAC: Si es tutora o invitado no autorizado, bloquea acceso directo por URL
+  if (role === "tutor") {
+    return (
+      <div className="max-w-xl mx-auto py-16 text-center space-y-4">
+        <div className="mx-auto size-16 rounded-2xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+          <ShieldAlert className="size-8" />
+        </div>
+        <h2 className="text-2xl font-bold">Módulo Restringido</h2>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          El directorio de tutores contiene información de contacto protegida por la <strong>Ley N° 19.628 de Protección de la Vida Privada</strong>. Este módulo es exclusivo para la administración y equipo veterinario de PetCare.
+        </p>
+        <Button asChild className="cursor-pointer">
+          <Link to="/mascotas">
+            <ArrowLeft className="size-4 mr-2" /> Volver a Mis Mascotas
+          </Link>
+        </Button>
+      </div>
+    );
+  }
+
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const [f, setF] = useState({ nombre: "", rut: "", email: "", telefono: "", direccion: "", foto: "" });
@@ -61,148 +90,172 @@ function Tutores() {
     reader.readAsDataURL(file);
   };
 
-  const save = async () => {
+  const save = () => {
     const r = schema.safeParse(f);
-    if (!r.success) { toast.error(r.error.issues[0]?.message ?? "Datos inválidos"); return; }
-    if (s.tutores.some((t) => t.rut.replace(/\D/g, "") === r.data.rut.replace(/\D/g, ""))) { toast.error("Ya existe un tutor con ese RUT"); return; }
+    if (!r.success) {
+      toast.error(r.error.issues[0]?.message ?? "Datos inválidos");
+      return;
+    }
     const fotoFinal = f.foto.trim() || undefined;
-    const nuevoTutor = { id: uid(), ...r.data, foto: fotoFinal };
-    s.set("tutores", [...s.tutores, nuevoTutor]);
+    s.set("tutores", [...s.tutores, { id: uid(), ...r.data, foto: fotoFinal }]);
     setOpen(false);
     setF({ nombre: "", rut: "", email: "", telefono: "", direccion: "", foto: "" });
-    toast.success(`Tutor "${nuevoTutor.nombre}" registrado exitosamente`);
-
-    // Sincronización asíncrona hacia Django REST Framework (PostgreSQL)
-    try {
-      await fetch("/api/tutores/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rut: nuevoTutor.rut,
-          nombre_completo: nuevoTutor.nombre,
-          email: nuevoTutor.email,
-          telefono: nuevoTutor.telefono,
-          direccion: nuevoTutor.direccion,
-          foto_url: nuevoTutor.foto ?? "",
-        }),
-      });
-    } catch {
-      // Ignorar fallo offline
-    }
+    toast.success(`Tutor "${r.data.nombre}" registrado exitosamente`);
   };
 
-  const list = s.tutores.filter((t) => (t.nombre + t.rut).toLowerCase().includes(q.toLowerCase()));
+  const filtered = s.tutores.filter(
+    (t) =>
+      t.nombre.toLowerCase().includes(q.toLowerCase()) ||
+      t.rut.toLowerCase().includes(q.toLowerCase()) ||
+      t.email.toLowerCase().includes(q.toLowerCase())
+  );
 
   return (
     <>
-      <PageHeader title="Tutores" subtitle="Responsables y dueños de cada paciente" action={
-        <Dialog open={open} onOpenChange={setOpen}>
-          <Button onClick={() => auth.requireAuth("create_tutor", () => setOpen(true))}><Plus /> Nuevo tutor</Button>
-          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-            <DialogHeader><DialogTitle>Registrar nuevo tutor</DialogTitle></DialogHeader>
-            <div className="grid gap-3 pt-2">
-              {(["nombre", "rut", "email", "telefono", "direccion"] as const).map((k) => (
-                <Field key={k} label={k === "nombre" ? "Nombre Completo" : k === "rut" ? "RUT (con guión y dígito)" : k.charAt(0).toUpperCase() + k.slice(1)}>
-                  <Input
-                    value={f[k]}
-                    onChange={(e) => setF({ ...f, [k]: e.target.value })}
-                    placeholder={k === "rut" ? "12.345.678-5" : k === "telefono" ? "+56 9 1234 5678" : ""}
-                  />
+      <PageHeader
+        title="Tutores"
+        subtitle="Registro y perfiles de clientes tutores de pacientes"
+        action={
+          <Dialog open={open} onOpenChange={setOpen}>
+            <Button onClick={() => auth.requireAuth("create_tutor", () => setOpen(true))}>
+              <Plus /> Nuevo tutor
+            </Button>
+            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Registrar nuevo tutor</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-3 pt-2">
+                <Field label="Nombre Completo">
+                  <Input value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} placeholder="Ej: Camila Rojas" />
                 </Field>
-              ))}
+                <Field label="RUT (con guión)">
+                  <Input value={f.rut} onChange={(e) => setF({ ...f, rut: e.target.value })} placeholder="12.345.678-9" />
+                </Field>
+                <Field label="Correo Electrónico">
+                  <Input type="email" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} placeholder="nombre@mail.cl" />
+                </Field>
+                <Field label="Teléfono / WhatsApp">
+                  <Input value={f.telefono} onChange={(e) => setF({ ...f, telefono: e.target.value })} placeholder="+56 9 1234 5678" />
+                </Field>
+                <Field label="Dirección Particular">
+                  <Input value={f.direccion} onChange={(e) => setF({ ...f, direccion: e.target.value })} placeholder="Av. Providencia 1234, Santiago" />
+                </Field>
 
-              {/* Selector de Avatar / Foto */}
-              <div className="rounded-xl border bg-muted/30 p-3 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-semibold flex items-center gap-1.5">
-                    <User className="size-3.5 text-primary" /> Foto de Perfil / Avatar
-                  </label>
-                  {f.foto && (
-                    <button
-                      type="button"
-                      onClick={() => setF({ ...f, foto: "" })}
-                      className="text-[11px] text-destructive hover:underline flex items-center gap-0.5"
-                    >
-                      <X className="size-3" /> Quitar foto
-                    </button>
-                  )}
-                </div>
-
-                {f.foto ? (
-                  <div className="relative mx-auto size-24 overflow-hidden rounded-2xl border-2 border-primary shadow-sm">
-                    <img src={f.foto} alt="Avatar" className="size-full object-cover" />
-                  </div>
-                ) : (
-                  <div className="grid place-items-center rounded-lg border border-dashed py-3 text-center">
-                    <Upload className="size-6 text-muted-foreground/60 mb-1" />
-                    <p className="text-[11px] text-muted-foreground">Sube un avatar o selecciona un preset rápido</p>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <label className="cursor-pointer flex-1">
-                    <Button variant="outline" size="sm" type="button" className="w-full text-xs pointer-events-none" asChild>
-                      <span><Upload className="size-3.5 mr-1" /> Subir desde PC</span>
-                    </Button>
-                    <input type="file" accept="image/*" onChange={handleImageFile} className="sr-only" />
-                  </label>
-                  <Input
-                    placeholder="O pega URL de foto..."
-                    value={f.foto?.startsWith("data:") ? "" : f.foto}
-                    onChange={(e) => setF({ ...f, foto: e.target.value })}
-                    className="flex-[2] text-xs h-8"
-                  />
-                </div>
-
-                <div>
-                  <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1">
-                    <Sparkles className="size-2.5 text-amber-500" /> Avatares predefinidos:
-                  </p>
-                  <div className="flex flex-wrap gap-1">
-                    {PRESET_TUTOR_AVATARS.map((p) => (
+                {/* Avatar / Foto del tutor */}
+                <div className="rounded-xl border bg-muted/30 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold flex items-center gap-1.5">
+                      <User className="size-3.5 text-primary" /> Avatar del Tutor
+                    </label>
+                    {f.foto && (
                       <button
-                        key={p.label}
                         type="button"
-                        onClick={() => setF({ ...f, foto: p.url })}
-                        className="rounded-md border bg-background px-2 py-0.5 text-[11px] hover:bg-primary/10 transition"
+                        onClick={() => setF({ ...f, foto: "" })}
+                        className="text-[11px] text-destructive hover:underline flex items-center gap-0.5"
                       >
-                        {p.label}
+                        <X className="size-3" /> Quitar avatar
                       </button>
-                    ))}
+                    )}
+                  </div>
+
+                  {f.foto ? (
+                    <div className="relative mx-auto size-20 overflow-hidden rounded-full border-2 border-primary shadow-sm">
+                      <img src={f.foto} alt="Avatar previo" className="size-full object-cover" />
+                    </div>
+                  ) : null}
+
+                  <div className="flex gap-2">
+                    <label className="cursor-pointer flex-1">
+                      <Button variant="outline" size="sm" type="button" className="w-full text-xs pointer-events-none" asChild>
+                        <span><Upload className="size-3.5 mr-1" /> Subir foto</span>
+                      </Button>
+                      <input type="file" accept="image/*" onChange={handleImageFile} className="sr-only" />
+                    </label>
+                    <Input
+                      placeholder="O pega URL de foto..."
+                      value={f.foto?.startsWith("data:") ? "" : f.foto}
+                      onChange={(e) => setF({ ...f, foto: e.target.value })}
+                      className="flex-[2] text-xs h-8"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                      <Sparkles className="size-2.5 text-amber-500" /> Presets recomendados:
+                    </p>
+                    <div className="flex flex-wrap gap-1">
+                      {PRESET_TUTOR_AVATARS.map((p) => (
+                        <button
+                          key={p.label}
+                          type="button"
+                          onClick={() => setF({ ...f, foto: p.url })}
+                          className="rounded-md border bg-background px-2 py-0.5 text-[11px] hover:bg-primary/10 transition"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <Button onClick={save} className="w-full mt-1">Guardar Tutor</Button>
-            </div>
-          </DialogContent>
-        </Dialog>} />
-      <Input placeholder="Buscar por nombre o RUT…" value={q} onChange={(e) => setQ(e.target.value)} className="mb-5 max-w-sm" />
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
-        {list.map((t) => { const pets = s.mascotas.filter((m) => m.tutorId === t.id); return (
-          <Card key={t.id} className="shadow-card border-0 overflow-hidden">
-            <div className="bg-hero h-16" />
-            <CardContent className="-mt-10 space-y-3">
-              <div className="flex items-end justify-between">
-                {t.foto ? <img src={t.foto} alt={t.nombre} className="size-20 rounded-2xl border-4 border-card object-cover" loading="lazy" />
-                  : <div className="grid size-20 place-items-center rounded-2xl border-4 border-card bg-secondary text-2xl font-bold text-primary">{t.nombre.charAt(0)}</div>}
-                <Button variant="ghost" size="icon" aria-label="Eliminar" onClick={() => {
-                  auth.requireAuth("delete_tutor", () => {
-                    if (pets.length) { toast.error("Tiene mascotas asociadas"); return; }
-                    s.set("tutores", s.tutores.filter((x) => x.id !== t.id));
-                    toast.success(`Tutor "${t.nombre}" eliminado`);
-                  });
-                }}><Trash2 /></Button>
+                <Button onClick={save} className="w-full mt-2">Guardar Tutor</Button>
               </div>
-              <div><h3 className="text-xl font-semibold">{t.nombre}</h3><p className="text-sm text-muted-foreground">RUT {t.rut}</p></div>
-              <div className="space-y-1 text-sm text-muted-foreground">
-                <p className="flex items-center gap-2"><Mail className="size-4" />{t.email}</p>
-                <p className="flex items-center gap-2"><Phone className="size-4" />{t.telefono}</p>
-                <p className="flex items-center gap-2"><MapPin className="size-4" />{t.direccion}</p>
-              </div>
-              <div className="flex -space-x-2">{pets.map((m) => <img key={m.id} src={m.foto} alt={m.nombre} title={m.nombre} className="size-9 rounded-full border-2 border-card object-cover" loading="lazy" />)}</div>
-            </CardContent>
-          </Card>); })}
+            </DialogContent>
+          </Dialog>
+        }
+      />
+
+      <div className="mb-4 max-w-sm">
+        <Input placeholder="Buscar por nombre, RUT o email…" value={q} onChange={(e) => setQ(e.target.value)} />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {filtered.map((t) => {
+          const mCount = s.mascotas.filter((m) => m.tutorId === t.id).length;
+          return (
+            <Card key={t.id} className="shadow-card border-0">
+              <CardContent className="space-y-3 p-5">
+                <div className="flex items-center gap-3">
+                  {t.foto ? (
+                    <img src={t.foto} alt={t.nombre} className="size-14 rounded-full object-cover shadow-sm" />
+                  ) : (
+                    <div className="grid size-14 place-items-center rounded-full bg-secondary font-display text-xl text-primary font-bold">
+                      {t.nombre[0]}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h3 className="font-bold text-base leading-tight">{t.nombre}</h3>
+                    <p className="text-xs text-muted-foreground font-mono">{t.rut}</p>
+                    <p className="text-xs text-primary font-medium mt-0.5">{mCount} mascota(s) registrada(s)</p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    title="Eliminar tutor"
+                    onClick={() => {
+                      auth.requireAuth("delete_tutor", () => {
+                        if (mCount > 0) {
+                          toast.error(`No se puede eliminar: tiene ${mCount} mascota(s) asociada(s)`);
+                          return;
+                        }
+                        s.set("tutores", s.tutores.filter((x) => x.id !== t.id));
+                        toast.success(`Tutor "${t.nombre}" eliminado`);
+                      });
+                    }}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </div>
+                <div className="space-y-1.5 text-xs text-muted-foreground pt-1 border-t">
+                  <p className="flex items-center gap-2"><Mail className="size-3.5 text-primary" />{t.email}</p>
+                  <p className="flex items-center gap-2"><Phone className="size-3.5 text-primary" />{t.telefono}</p>
+                  <p className="flex items-center gap-2"><MapPin className="size-3.5 text-primary" />{t.direccion}</p>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
     </>
   );

@@ -118,14 +118,15 @@ function Profesionales() {
         title="Equipo Médico Veterinario"
         subtitle="Configura la disponibilidad horaria y profesionales para la prevención de solapamientos"
         action={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <Button onClick={() => auth.requireAuth("create_vet", () => setOpen(true))}>
-              <Plus /> Nuevo Profesional
-            </Button>
-            <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Registrar Médico Veterinario</DialogTitle>
-              </DialogHeader>
+          (auth.role === "superadmin" || auth.role === "admin") ? (
+            <Dialog open={open} onOpenChange={setOpen}>
+              <Button onClick={() => auth.requireAuth("create_vet", () => setOpen(true))}>
+                <Plus /> Nuevo Profesional
+              </Button>
+              <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Registrar Médico Veterinario</DialogTitle>
+                </DialogHeader>
               <div className="grid gap-3 pt-2">
                 <Field label="Nombre Completo">
                   <Input
@@ -241,6 +242,7 @@ function Profesionales() {
               </div>
             </DialogContent>
           </Dialog>
+          ) : null
         }
       />
 
@@ -261,15 +263,17 @@ function Profesionales() {
                     <h3 className="text-xl font-semibold leading-tight">{v.nombre}</h3>
                     <p className="text-sm text-muted-foreground">{v.especialidad}</p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    title="Eliminar profesional"
-                    onClick={() => auth.requireAuth("delete_vet", () => deleteVet(v.id, v.nombre))}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
+                  {(auth.role === "superadmin" || auth.role === "admin") && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                      title="Eliminar profesional"
+                      onClick={() => auth.requireAuth("delete_vet", () => deleteVet(v.id, v.nombre))}
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  )}
                 </div>
 
                 <div>
@@ -281,13 +285,14 @@ function Profesionales() {
                       <button
                         key={d}
                         type="button"
+                        disabled={auth.role === "tutor"}
                         onClick={() =>
                           upd(v.id, {
                             dias: v.dias.includes(i) ? v.dias.filter((x) => x !== i) : [...v.dias, i],
                           })
                         }
                       >
-                        <Badge variant={v.dias.includes(i) ? "default" : "outline"} className="cursor-pointer">
+                        <Badge variant={v.dias.includes(i) ? "default" : "outline"} className={auth.role === "tutor" ? "pointer-events-none" : "cursor-pointer"}>
                           {d}
                         </Badge>
                       </button>
@@ -298,19 +303,25 @@ function Profesionales() {
                 <div className="flex items-center gap-2 text-xs">
                   <Clock className="size-3.5 text-muted-foreground" />
                   <span className="text-muted-foreground">Horario:</span>
-                  <Input
-                    type="time"
-                    value={v.inicio}
-                    onChange={(e) => upd(v.id, { inicio: e.target.value })}
-                    className="w-24 h-7 text-xs"
-                  />
-                  <span>a</span>
-                  <Input
-                    type="time"
-                    value={v.fin}
-                    onChange={(e) => upd(v.id, { fin: e.target.value })}
-                    className="w-24 h-7 text-xs"
-                  />
+                  {(auth.role === "superadmin" || auth.role === "admin") ? (
+                    <>
+                      <Input
+                        type="time"
+                        value={v.inicio}
+                        onChange={(e) => upd(v.id, { inicio: e.target.value })}
+                        className="w-24 h-7 text-xs"
+                      />
+                      <span>a</span>
+                      <Input
+                        type="time"
+                        value={v.fin}
+                        onChange={(e) => upd(v.id, { fin: e.target.value })}
+                        className="w-24 h-7 text-xs"
+                      />
+                    </>
+                  ) : (
+                    <span className="font-semibold text-slate-700">{v.inicio} a {v.fin} hrs</span>
+                  )}
                 </div>
               </div>
             </CardContent>
